@@ -1,7 +1,9 @@
 from app.main import app
 from app.newsFetcher import NewsFetcher
 from app.scheduler import Scheduler
+import os
 news_fetcher = NewsFetcher('news.db')
+
 
 
 if __name__ == '__main__':
@@ -21,4 +23,5 @@ if __name__ == '__main__':
     scheduler.setup_scheduler()
 
     # API'yi başlat
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
