@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,render_template
 from app.newsFetcher import NewsFetcher
 from app.scheduler import Scheduler
 from app.models import create_tables
@@ -41,5 +41,6 @@ def nuce():
     xwebun_data = news_fetcher.scrape_xwebun()
 
     nuhev_data = news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
-    news_data = [diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data]
-    return jsonify(news_data)
+    news_data = diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data
+    return render_template('news_list.html', news=news_data)
+    
