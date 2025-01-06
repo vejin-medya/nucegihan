@@ -32,3 +32,14 @@ def get_news():
     news = conn.execute(query, params).fetchall()
     conn.close()
     return jsonify([dict(row) for row in news])
+
+@app.route('/', methods=['GET'])
+def nuce():
+    diyarname_data = news_fetcher.diyarname_rss()
+    bianet_data = news_fetcher.fetch_bianet_rss()
+    ajansa_welat_data = news_fetcher.scrape_ajansa_welat()
+    xwebun_data = news_fetcher.scrape_xwebun()
+
+    nuhev_data = news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
+    news_data = [diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data]
+    return jsonify(news_data)
