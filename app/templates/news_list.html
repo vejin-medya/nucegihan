@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .news-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #fff;
+            display: flex;
+            gap: 15px;
+        }
+        .news-item img {
+            max-width: 120px;
+            border-radius: 4px;
+        }
+        .news-content {
+            flex: 1;
+        }
+        .news-content h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .news-content p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .news-content a {
+            text-decoration: none;
+            color: #2E7D32;
+        }
+    </style>
+</head>
+<body>
+    <h1>News List</h1>
+    {% for item in news %}
+        <div class="news-item">
+            <img src="{{ item.image_url }}" alt="News Image">
+            <div class="news-content">
+                <h3><a href="{{ item.link }}" target="_blank">{{ item.headline }}</a></h3>
+                <p><strong>Site:</strong> {{ item.site_name }}</p>
+                <p><strong>Date:</strong> {{ item.publish_date }}</p>
+            </div>
+        </div>
+    {% endfor %}
+</body>
+</html>

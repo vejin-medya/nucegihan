@@ -2,10 +2,17 @@ from flask import Flask, request, jsonify,render_template
 from app.newsFetcher import NewsFetcher
 from app.scheduler import Scheduler
 from app.models import create_tables
+import os
 
+# Get the current directory of the application
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Define the path to the templates folder relative to the current directory
+template_folder_path = os.path.join(current_dir, 'templates')  # Adjusted path
 # Flask API
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder=template_folder_path)
+# Print the absolute path of the template folder to debug
+print("Template folder path:", os.path.abspath(app.template_folder))
 # Veritabanı ve haber çekme sınıfı
 news_fetcher = NewsFetcher('news.db')
 
@@ -39,9 +46,8 @@ def nuce():
     bianet_data = news_fetcher.fetch_bianet_rss()
     ajansa_welat_data = news_fetcher.scrape_ajansa_welat()
     xwebun_data = news_fetcher.scrape_xwebun()
-
     nuhev_data = news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
+
     news_data = diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data
-    return news_data
-    # return render_template('news_list.html', news=news_data)
+    return render_template('news_list.html', news=news_data)
     
