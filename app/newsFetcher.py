@@ -1,40 +1,55 @@
+import os
 import requests
-import sqlite3
 from datetime import datetime
 from bs4 import BeautifulSoup
 import feedparser
 import xml.etree.ElementTree as ET
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.exc import IntegrityError
 
+# Setup SQLAlchemy Base and ORM model
+Base = declarative_base()
+
+class News(Base):
+    __tablename__ = 'news'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    link = Column(Text, unique=True)
+    headline = Column(Text)
+    image_url = Column(Text)
+    publish_date = Column(String)
+    site_name = Column(Text)
 
 class NewsFetcher:
-    def __init__(self, db_name):
-        self.db_name = db_name
-
-    def get_db_connection(self):
-        conn = sqlite3.connect(self.db_name)
-        conn.row_factory = sqlite3.Row
-        return conn
+    def __init__(self):
+        # Use DATABASE_URL environment variable (Heroku will automatically set this)
+        self.db_url = os.getenv('DATABASE_URL', 'sqlite:///news.db')  # Fallback for local development
+        self.engine = create_engine(self.db_url)
+        Base.metadata.create_all(self.engine)  # Create tables if not exists
+        self.Session = sessionmaker(bind=self.engine)
 
     def save_news(self, data):
-        conn = self.get_db_connection()
-        cursor = conn.cursor()
-        for news in data:
-            cursor.execute(
-                """
-                INSERT OR IGNORE INTO news (link, headline, image_url, publish_date, site_name)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (news['link'], news['headline'], news['image_url'], news['publish_date'], news['site_name'])
-            )
-        conn.commit()
-        conn.close()
+        session = self.Session()
+        try:
+            for news_item in data:
+                news_entry = News(
+                    link=news_item['link'],
+                    headline=news_item['headline'],
+                    image_url=news_item['image_url'],
+                    publish_date=news_item['publish_date'],
+                    site_name=news_item['site_name']
+                )
+                session.add(news_entry)
+            session.commit()
+        except IntegrityError:
+            session.rollback()  # Rollback transaction on failure
+        finally:
+            session.close()
 
     @staticmethod
     def fetch_bianet_rss():
         rss_url = "https://bianet.org/rss/kurdi"
         response = requests.get(rss_url)
-
-        # RSS feed parsing
         root = ET.fromstring(response.content)
         news_items = []
 
@@ -63,7 +78,7 @@ class NewsFetcher:
         rss_url = "https://diyarname.com/rss_news.php"
         response = requests.get(rss_url)
         response.encoding = 'utf-8'
-        root = ET.fromstring(response.content) 
+        root = ET.fromstring(response.content)
         channel = root.find("channel")
         data = []
         for item in channel.findall("item")[:20]:
@@ -75,7 +90,7 @@ class NewsFetcher:
                 'link': link,
                 'headline': title,
                 'image_url': thumbnail,
-                'publish_date':pub_date,
+                'publish_date': pub_date,
                 'site_name': 'Diyarname'
             })
         return data
@@ -83,11 +98,10 @@ class NewsFetcher:
     @staticmethod
     def scrape_ajansa_welat():
         url = 'https://ajansawelat.com/'
-        # Send a GET request to the webpage
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         data = []
-        first_article = soup.find('div', class_ ="jeg_post jeg_pl_md_box")
+        first_article = soup.find('div', class_="jeg_post jeg_pl_md_box")
         articles = soup.find_all('div', class_='jeg_post jeg_pl_xs_3')
         articles.insert(0, first_article)
         for article in articles:
@@ -110,11 +124,11 @@ class NewsFetcher:
     def scrape_xwebun():
         url = 'https://xwebun2.org/cat/hemu/'
         response = requests.get(url)
-        response.raise_for_status()  # Hataları kontrol et
-        
+        response.raise_for_status()
+
         soup = BeautifulSoup(response.text, 'html.parser')
         data = []
-        articles = soup.find('div', class_ ="td-main-content-wrap td-container-wrap").find('div', class_='td_block_inner td-mc1-wrap')
+        articles = soup.find('div', class_="td-main-content-wrap td-container-wrap").find('div', class_='td_block_inner td-mc1-wrap')
         tags = articles.find_all('div', class_='td_module_flex td_module_flex_1 td_module_wrap td-animation-stack td-cpt-post')
 
         for item in tags:
@@ -122,13 +136,11 @@ class NewsFetcher:
             image_span = item.find('span', class_='entry-thumb')
             date_tag = item.find('time', class_='entry-date')
 
-            # Haber bilgilerini çıkart
             title = title_tag.text if title_tag else None
             link = title_tag.a['href'] if title_tag and title_tag.a else None
             image_style = image_span.get('style', '') if image_span else None
             date = date_tag['datetime'] if date_tag else None
 
-            # Resim URL'sini çek
             if image_style:
                 start = image_style.find("url('") + len("url('")
                 end = image_style.find("')", start)

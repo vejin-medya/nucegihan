@@ -8,16 +8,16 @@ import os
 
 
 if __name__ == '__main__':
-    # # İlk scraping işlemleri
-    # print("Starting initial scraping...")
-    # diyarname_data = news_fetcher.diyarname_rss()
-    # bianet_data = news_fetcher.fetch_bianet_rss()
-    # ajansa_welat_data = news_fetcher.scrape_ajansa_welat()
-    # xwebun_data = news_fetcher.scrape_xwebun()
+    # İlk scraping işlemleri
+    print("Starting initial scraping...")
+    diyarname_data = news_fetcher.diyarname_rss()
+    bianet_data = news_fetcher.fetch_bianet_rss()
+    ajansa_welat_data = news_fetcher.scrape_ajansa_welat()
+    xwebun_data = news_fetcher.scrape_xwebun()
 
-    # nuhev_data = news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
+    nuhev_data = news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
 
-    # news_fetcher.save_news(diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data)
+    news_fetcher.save_news(diyarname_data + bianet_data + ajansa_welat_data + nuhev_data + xwebun_data)
     
     # # Zamanlayıcıyı başlat
     # scheduler = Scheduler(news_fetcher)
