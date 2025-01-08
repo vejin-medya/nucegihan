@@ -28,11 +28,15 @@ def save_news():
         ajansa_welat_data = NewsFetcher.scrape_ajansa_welat()
         xwebun_data = NewsFetcher.scrape_xwebun()
         nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
+
         all_news = diyarname_data + bianet_data + ajansa_welat_data + xwebun_data + nuhev_data
-        saving = db_manager.save_news(all_news)
+        saved_count = db_manager.save_news(all_news)
+        
+        return {"message": "News fetched and saved successfully", "saved_count": saved_count}, 200
+
     except Exception as e:
         print(f"Error during scraping or saving: {e}")
-    return saving
+        return {"message": "An error occurred", "error": str(e)}, 500
 
 @app.route('/', methods=['GET'])
 def nuce():
