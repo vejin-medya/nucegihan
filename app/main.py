@@ -13,6 +13,8 @@ print("Template folder path:", os.path.abspath(app.template_folder))
 
 load_dotenv()
 db_url = os.getenv('DATABASE_URL')
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
 db_manager = DatabaseManager(db_url)
 # Initialize NewsFetcher
 news_fetcher = NewsFetcher()
@@ -20,7 +22,6 @@ news_fetcher = NewsFetcher()
 # Routes
 @app.route('/save-news')
 def save_news():
-
     try:
         diyarname_data = NewsFetcher.diyarname_rss()
         bianet_data = NewsFetcher.fetch_bianet_rss()

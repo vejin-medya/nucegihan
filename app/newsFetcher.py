@@ -9,7 +9,9 @@ from app.database_manager import DatabaseManager, News
 from dotenv import load_dotenv
 load_dotenv()
 db_url = os.getenv('DATABASE_URL')
-print(db_url)
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 db_manager = DatabaseManager(db_url)
 class NewsFetcher:
     @staticmethod
