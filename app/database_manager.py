@@ -1,8 +1,8 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, Text, String, DateTime, UniqueConstraint
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 Base = declarative_base()
 
 class News(Base):
@@ -17,41 +17,40 @@ class News(Base):
     __table_args__ = (UniqueConstraint('link', name='uix_1'),)
 
 class DatabaseManager:
-    def __init__(self):
-        # Get the DATABASE_URL from environment (Heroku provides this automatically)
-        self.db_url = os.getenv('DATABASE_URL', 'sqlite:///news.db')  # Fallback for local testing
-        self.engine = create_engine(self.db_url)
-        Base.metadata.create_all(self.engine)  # Create tables
+    def __init__(self, db_url):
+        # Initialize SQLAlchemy engine and session factory
+        self.engine = create_engine(db_url, echo=True)
         self.Session = sessionmaker(bind=self.engine)
-
+    def create_tables(self,db_url):
+        engine = create_engine(db_url)
+        Base.metadata.create_all(engine)
+        print("Tables created successfully.")
     def save_news(self, data):
+        """Saves a list of news items to the PostgreSQL database."""
         session = self.Session()
         try:
-            for news_item in data:
-                news_entry = News(
-                    link=news_item['link'],
-                    headline=news_item['headline'],
-                    image_url=news_item['image_url'],
-                    publish_date=news_item['publish_date'],
-                    site_name=news_item['site_name']
-                )
-                session.add(news_entry)
+            # Batch insert with ON CONFLICT DO NOTHING
+            stmt = pg_insert(News).values(data).on_conflict_do_nothing()
+            session.execute(stmt)
             session.commit()
-        except IntegrityError:  # Handle duplicate entries
+            print("News saved successfully.")
+        except IntegrityError as e:
+            print(f"Integrity error while saving news: {e}")
+            session.rollback()
+        except Exception as e:
+            print(f"Unexpected error while saving news: {e}")
             session.rollback()
         finally:
             session.close()
 
+
     def get_news(self, site=None, since=None):
         session = self.Session()
         query = session.query(News)
-        
         if site:
             query = query.filter(News.site_name == site)
         if since:
             query = query.filter(News.publish_date > since)
-        
-        news = query.order_by(News.publish_date.desc()).limit(200).all()
+        news = query.order_by(News.publish_date.asc()).limit(300).all()
         session.close()
-
         return [news_item.__dict__ for news_item in news]

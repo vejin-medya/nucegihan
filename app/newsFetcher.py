@@ -3,49 +3,15 @@ import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
 import feedparser
-import xml.etree.ElementTree as ET
-from sqlalchemy import create_engine, Column, Integer, String, Text
-from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import IntegrityError
-
-# Setup SQLAlchemy Base and ORM model
-Base = declarative_base()
-
-class News(Base):
-    __tablename__ = 'news'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    link = Column(Text, unique=True)
-    headline = Column(Text)
-    image_url = Column(Text)
-    publish_date = Column(String)
-    site_name = Column(Text)
-
+import xml.etree.ElementTree as ET
+from app.database_manager import DatabaseManager, News
+from dotenv import load_dotenv
+load_dotenv()
+db_url = os.getenv('DATABASE_URL')
+print(db_url)
+db_manager = DatabaseManager(db_url)
 class NewsFetcher:
-    def __init__(self):
-        # Use DATABASE_URL environment variable (Heroku will automatically set this)
-        self.db_url = os.getenv('DATABASE_URL', 'sqlite:///news.db')  # Fallback for local development
-        self.engine = create_engine(self.db_url)
-        Base.metadata.create_all(self.engine)  # Create tables if not exists
-        self.Session = sessionmaker(bind=self.engine)
-
-    def save_news(self, data):
-        session = self.Session()
-        try:
-            for news_item in data:
-                news_entry = News(
-                    link=news_item['link'],
-                    headline=news_item['headline'],
-                    image_url=news_item['image_url'],
-                    publish_date=news_item['publish_date'],
-                    site_name=news_item['site_name']
-                )
-                session.add(news_entry)
-            session.commit()
-        except IntegrityError:
-            session.rollback()  # Rollback transaction on failure
-        finally:
-            session.close()
-
     @staticmethod
     def fetch_bianet_rss():
         rss_url = "https://bianet.org/rss/kurdi"
@@ -81,7 +47,7 @@ class NewsFetcher:
         root = ET.fromstring(response.content)
         channel = root.find("channel")
         data = []
-        for item in channel.findall("item")[:20]:
+        for item in channel.findall("item")[:40]:
             title = item.find("title").text
             link = item.find("link").text
             pub_date = item.find("pubDate").text
@@ -169,3 +135,16 @@ class NewsFetcher:
                 'site_name': site_name
             })
         return data
+
+    def fetch_and_save_allNews():
+        try:
+            diyarname_data = NewsFetcher.diyarname_rss()
+            bianet_data = NewsFetcher.fetch_bianet_rss()
+            ajansa_welat_data = NewsFetcher.scrape_ajansa_welat()
+            xwebun_data = NewsFetcher.scrape_xwebun()
+            nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
+            all_news = diyarname_data + bianet_data + ajansa_welat_data + xwebun_data + nuhev_data
+            saving = db_manager.save_news(all_news)
+        except Exception as e:
+            print(f"Error during scraping or saving: {e}")
+        return saving
