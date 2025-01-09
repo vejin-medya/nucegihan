@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, request, jsonify, render_template
 from app.newsFetcher import NewsFetcher
 from app.database_manager import DatabaseManager, News
@@ -52,7 +53,10 @@ def all_news():
         'publish_date': news["publish_date"],
         'site_name': news["site_name"]
     } for news in news_items]
-    return render_template('news_list.html', news=news_list)
+    news_data_sorted = sorted(
+    news_list,
+    key=lambda x: datetime.datetime.strptime(x["publish_date"], "%d.%m.%y %H:%M"))
+    return render_template('news_list.html', news=news_data_sorted)
 
 @app.route('/', methods=['GET'])
 def get_news():
@@ -68,4 +72,8 @@ def get_news():
         'publish_date': news["publish_date"],
         'site_name': news["site_name"]
     } for news in news_items]
-    return news_list
+    news_data_sorted = sorted(
+    news_list,
+    key=lambda x: datetime.datetime.strptime(x["publish_date"], "%d.%m.%y %H:%M")
+)
+    return news_data_sorted

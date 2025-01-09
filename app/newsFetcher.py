@@ -7,6 +7,8 @@ from sqlalchemy.exc import IntegrityError
 import xml.etree.ElementTree as ET
 from app.database_manager import DatabaseManager, News
 from dotenv import load_dotenv
+
+from app.time_conf import format_and_validate_date_time
 load_dotenv()
 db_url = os.getenv('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
@@ -24,7 +26,6 @@ class NewsFetcher:
         for item in root.findall(".//item"):
             title = item.find("title").text
             link = item.find("link").text
-            description = item.find("description").text
             pub_date = item.find("pubDate").text
             media_content = item.find("{http://search.yahoo.com/mrss/}content")
             image_url = media_content.attrib.get('url') if media_content is not None else None
@@ -33,7 +34,7 @@ class NewsFetcher:
                 "link": link,
                 "headline": title,
                 "image_url": image_url,
-                "publish_date": pub_date,
+                "publish_date": format_and_validate_date_time(pub_date),
                 "site_name": "Bianet"
             }
 
@@ -58,7 +59,7 @@ class NewsFetcher:
                 'link': link,
                 'headline': title,
                 'image_url': thumbnail,
-                'publish_date': pub_date,
+                'publish_date': format_and_validate_date_time(pub_date),
                 'site_name': 'Diyarname'
             })
         return data
@@ -78,10 +79,13 @@ class NewsFetcher:
 
             # Create a base news dictionary
             news_item = {
-                "title": title,
+                "headline": title,
                 "link": link,
-                "published": pub_date,
+                "publish_date": format_and_validate_date_time(pub_date),
                 "image_url": None,  # To be filled later via scraping
+                'site_name': 'Ajansa Welat',
+
+                
             }
             news_items.append(news_item)
 
@@ -107,7 +111,7 @@ class NewsFetcher:
         for news_item in news_items:
             if news_item['link'] in scraped_images:
                 news_item['image_url'] = scraped_images[news_item['link']]
-
+            print(news_item)
         
         return news_items
 
@@ -142,7 +146,7 @@ class NewsFetcher:
                 'link': link,
                 'headline': title,
                 'image_url': image_url,
-                'publish_date': date,
+                'publish_date': format_and_validate_date_time(date),
                 'site_name': 'Xwebûn'
             })
         return data
@@ -156,7 +160,7 @@ class NewsFetcher:
                 'link': entry.link,
                 'headline': entry.title,
                 'image_url': entry.get('media_content', [{'url': ''}])[0]['url'],
-                'publish_date': entry.published if 'published' in entry else datetime.now().isoformat(),
+                'publish_date': format_and_validate_date_time(entry.published) if 'published' in entry else datetime.now().isoformat(),
                 'site_name': site_name
             })
         return data
