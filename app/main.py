@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime 
 from flask import Flask, request, jsonify, render_template
 from app.newsFetcher import NewsFetcher
 from app.database_manager import DatabaseManager, News
