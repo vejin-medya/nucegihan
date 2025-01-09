@@ -38,17 +38,7 @@ def save_news():
         print(f"Error during scraping or saving: {e}")
         return {"message": "An error occurred", "error": str(e)}, 500
 
-@app.route('/', methods=['GET'])
-def nuce():
-    news_data = (
-        news_fetcher.diyarname_rss()
-        + news_fetcher.fetch_bianet_rss()
-        + news_fetcher.scrape_ajansa_welat()
-        + news_fetcher.scrape_xwebun()
-        + news_fetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
-    )
-    return render_template('news_list.html', news=news_data)
-@app.route('/all-news', methods=['GET'])
+@app.route('/all-news-html', methods=['GET'])
 def all_news():
     site = request.args.get('site')
     since = request.args.get('since')
@@ -63,3 +53,19 @@ def all_news():
         'site_name': news["site_name"]
     } for news in news_items]
     return render_template('news_list.html', news=news_list)
+
+@app.route('/', methods=['GET'])
+def get_news():
+    site = request.args.get('site')
+    since = request.args.get('since')
+    news_items = db_manager.get_news(site, since)
+    # Serialize the results
+    news_list = [{
+        'id': news["id"],
+        'link': news["link"],
+        'headline': news["headline"],
+        'image_url': news["image_url"],
+        'publish_date': news["publish_date"],
+        'site_name': news["site_name"]
+    } for news in news_items]
+    return news_list
