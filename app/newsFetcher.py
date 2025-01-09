@@ -64,29 +64,52 @@ class NewsFetcher:
         return data
 
     @staticmethod
-    def scrape_ajansa_welat():
-        url = 'https://ajansawelat.com/'
-        response = requests.get(url)
+    def scrape_and_feed_ajansa_wela():
+        # Step 1: Fetch and parse RSS feed
+        rss_url = "https://ajansawelat.com/feed/"
+        rss_response = requests.get(rss_url)
+        rss_root = ET.fromstring(rss_response.content)
+        news_items = []
+
+        for item in rss_root.findall(".//item"):
+            title = item.find("title").text
+            link = item.find("link").text
+            pub_date = item.find("pubDate").text
+
+            # Create a base news dictionary
+            news_item = {
+                "title": title,
+                "link": link,
+                "published": pub_date,
+                "image_url": None,  # To be filled later via scraping
+            }
+            news_items.append(news_item)
+
+        # Step 2: Scrape the site for image URLs
+        page_url = 'https://ajansawelat.com/'
+        response = requests.get(page_url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        data = []
-        first_article = soup.find('div', class_="jeg_post jeg_pl_md_box")
-        articles = soup.find_all('div', class_='jeg_post jeg_pl_xs_3')
-        articles.insert(0, first_article)
-        for article in articles:
-            genel = article.find('h2', class_='jeg_post_title')
-            headline = genel.text.strip()
-            image_url = article.find('img')['data-src']
-            updated_url = image_url.replace("75x75", "350x350")
-            link = genel.find('a')['href']
-            time_element = article.find('div', class_='jeg_meta_date').text.strip()
-            data.append({
-                'link': link,
-                'headline': headline,
-                'image_url': updated_url,
-                'publish_date': time_element,
-                'site_name': 'Ajansa Welat'
-            })
-        return data
+
+        # Map links to images from scraping
+        scraped_articles = soup.find_all('div', class_="jeg_post")
+        scraped_images = {}
+
+        for article in scraped_articles:
+            tag = article.find('h2', class_='jeg_post_title')
+            if tag:
+                link = tag.find('a')['href']
+                image = article.find('img')
+                if image and image.get('data-src'):
+                    image_url = image['data-src'].replace("75x75", "350x350")
+                    scraped_images[link] = image_url
+
+        # Step 3: Combine RSS data with scraped images
+        for news_item in news_items:
+            if news_item['link'] in scraped_images:
+                news_item['image_url'] = scraped_images[news_item['link']]
+
+        
+        return news_items
 
     @staticmethod
     def scrape_xwebun():
@@ -139,10 +162,11 @@ class NewsFetcher:
         return data
 
     def fetch_and_save_allNews():
+        saving = ""
         try:
             diyarname_data = NewsFetcher.diyarname_rss()
             bianet_data = NewsFetcher.fetch_bianet_rss()
-            ajansa_welat_data = NewsFetcher.scrape_ajansa_welat()
+            ajansa_welat_data = NewsFetcher.scrape_and_feed_ajansa_wela()
             xwebun_data = NewsFetcher.scrape_xwebun()
             nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
             all_news = diyarname_data + bianet_data + ajansa_welat_data + xwebun_data + nuhev_data
