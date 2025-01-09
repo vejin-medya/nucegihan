@@ -25,7 +25,7 @@ def save_news():
     try:
         diyarname_data = NewsFetcher.diyarname_rss()
         bianet_data = NewsFetcher.fetch_bianet_rss()
-        ajansa_welat_data = NewsFetcher.scrape_ajansa_welat()
+        ajansa_welat_data = NewsFetcher.scrape_and_feed_ajansa_welat()
         xwebun_data = NewsFetcher.scrape_xwebun()
         nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
 

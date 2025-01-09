@@ -64,7 +64,7 @@ class NewsFetcher:
         return data
 
     @staticmethod
-    def scrape_and_feed_ajansa_wela():
+    def scrape_and_feed_ajansa_welat():
         # Step 1: Fetch and parse RSS feed
         rss_url = "https://ajansawelat.com/feed/"
         rss_response = requests.get(rss_url)
@@ -166,7 +166,7 @@ class NewsFetcher:
         try:
             diyarname_data = NewsFetcher.diyarname_rss()
             bianet_data = NewsFetcher.fetch_bianet_rss()
-            ajansa_welat_data = NewsFetcher.scrape_and_feed_ajansa_wela()
+            ajansa_welat_data = NewsFetcher.scrape_and_feed_ajansa_welat()
             xwebun_data = NewsFetcher.scrape_xwebun()
             nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
             all_news = diyarname_data + bianet_data + ajansa_welat_data + xwebun_data + nuhev_data
