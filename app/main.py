@@ -55,7 +55,7 @@ def all_news():
     } for news in news_items]
     news_data_sorted = sorted(
     news_list,
-    key=lambda x: datetime.datetime.strptime(x["publish_date"], "%Y-%m-%dT%H:%M:%S%z")
+    key=lambda x: datetime.strptime(x["publish_date"], "%Y-%m-%d %H:%M:%S"), reverse= True
 )
     return render_template('news_list.html', news=news_data_sorted)
 
@@ -75,6 +75,6 @@ def get_news():
     } for news in news_items]
     news_data_sorted = sorted(
     news_list,
-    key=lambda x: datetime.datetime.strptime(x["publish_date"], "%Y-%m-%dT%H:%M:%S%z"),
+    key=lambda x: datetime.strptime(x["publish_date"], "%Y-%m-%d %H:%M:%S"), reverse= True
 )
     return news_data_sorted
