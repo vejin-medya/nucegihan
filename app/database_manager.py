@@ -51,6 +51,6 @@ class DatabaseManager:
             query = query.filter(News.site_name == site)
         if since:
             query = query.filter(News.publish_date > since)
-        news = query.order_by(News.publish_date.asc()).limit(300).all()
+        news = query.order_by(News.publish_date.desc()).limit(300).all()
         session.close()
         return [news_item.__dict__ for news_item in news]
