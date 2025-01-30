@@ -35,7 +35,6 @@ def save_news():
         channel8_data = NewsFetcher.channel8_rss()
         all_news = diyarname_data + bianet_data + ajansa_welat_kur + ajansa_welat_za+ xwebun_data + nuhev_data+ zazaki_news_data + rojavatv_data + channel8_data
         saved_count = db_manager.save_news(all_news)
-        
         return {"message": "News fetched and saved successfully", "saved_count": saved_count}, 200
 
     except Exception as e:

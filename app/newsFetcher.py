@@ -112,8 +112,6 @@ class NewsFetcher:
         for news_item in news_items:
             if news_item['link'] in scraped_images:
                 news_item['image_url'] = scraped_images[news_item['link']]
-            print(news_item)
-        
         return news_items
 
     @staticmethod
