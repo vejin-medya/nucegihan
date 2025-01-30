@@ -13,6 +13,7 @@ class News(Base):
     image_url = Column(Text)
     publish_date = Column(String)
     site_name = Column(Text)
+    ziman = Column(Text)
 
     __table_args__ = (UniqueConstraint('link', name='uix_1'),)
 

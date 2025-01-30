@@ -50,6 +50,9 @@
                 <h3><a href="{{ item.link }}" target="_blank">{{ item.headline }}</a></h3>
                 <p><strong>Site:</strong> {{ item.site_name }}</p>
                 <p><strong>Date:</strong> {{ item.publish_date }}</p>
+            {% if item.ziman == 'zza' %}
+                <p><strong>Zazakî</strong></p>
+            {% endif %}
             </div>
         </div>
     {% endfor %}

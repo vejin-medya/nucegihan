@@ -26,11 +26,14 @@ def save_news():
     try:
         diyarname_data = NewsFetcher.diyarname_rss()
         bianet_data = NewsFetcher.fetch_bianet_rss()
-        ajansa_welat_data = NewsFetcher.scrape_and_feed_ajansa_welat()
+        ajansa_welat_kur = NewsFetcher.scrape_and_feed_ajansa_welat('https://ajansawelat.com/feed/', lang= "kur")
+        ajansa_welat_za = NewsFetcher.scrape_and_feed_ajansa_welat('https://ajansawelat.com/ki/feed/', lang= "zza")
         xwebun_data = NewsFetcher.scrape_xwebun()
         nuhev_data = NewsFetcher.fetch_rss('https://www.nuhev.com/feed/', 'Nuhev')
-
-        all_news = diyarname_data + bianet_data + ajansa_welat_data + xwebun_data + nuhev_data
+        zazaki_news_data = NewsFetcher.fetch_zazaki_news_rss('https://www.zazakinews.com/rss/tum-mansetler', 'Zazakî News')
+        rojavatv_data = NewsFetcher.rojavatv_rss()
+        channel8_data = NewsFetcher.channel8_rss()
+        all_news = diyarname_data + bianet_data + ajansa_welat_kur + ajansa_welat_za+ xwebun_data + nuhev_data+ zazaki_news_data + rojavatv_data + channel8_data
         saved_count = db_manager.save_news(all_news)
         
         return {"message": "News fetched and saved successfully", "saved_count": saved_count}, 200
@@ -51,7 +54,8 @@ def all_news():
         'headline': news["headline"],
         'image_url': news["image_url"],
         'publish_date': news["publish_date"],
-        'site_name': news["site_name"]
+        'site_name': news["site_name"],
+        "ziman" : news["ziman"]
     } for news in news_items]
     news_data_sorted = sorted(
     news_list,
@@ -71,7 +75,8 @@ def get_news():
         'headline': news["headline"],
         'image_url': news["image_url"],
         'publish_date': news["publish_date"],
-        'site_name': news["site_name"]
+        'site_name': news["site_name"],
+        "ziman" : news["ziman"]
     } for news in news_items]
     news_data_sorted = sorted(
     news_list,

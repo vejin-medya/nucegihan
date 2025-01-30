@@ -17,5 +17,6 @@ class News(Base):
     image_url = Column(Text)
     publish_date = Column(String)
     site_name = Column(String)
+    ziman = Column(String)
 
 
